@@ -4,13 +4,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -42,8 +38,21 @@ public class ListController implements Initializable {
     public TableColumn<Student, String> colYear;
     @FXML
     public Button btnSave;
-    ObservableList<Student> students = FXCollections.observableArrayList(Arrays.asList(new Student(1, "Becir", "Isakovic", "1", "1"), new Student(2, "Bekir", "Ishakovic", "2", "2")));
+    ObservableList<Student> students = FXCollections.observableArrayList(
+            Arrays.asList(
+                    new Student(1, "Becir", "Isakovic", "1", "1"),
+                    new Student(2, "Bekir", "Ishakovic", "2", "2")
+            )
+    );
     int selectedIndex;
+
+    static void showError(String title, String message) {
+        Locale.setDefault(Locale.ENGLISH);
+        Alert error = new Alert(Alert.AlertType.ERROR);
+        error.setTitle(title);
+        error.setHeaderText(message);
+        error.show();
+    }
 
     @FXML
     void getStudent(MouseEvent event) {
@@ -82,14 +91,6 @@ public class ListController implements Initializable {
                 }
             }
         }
-    }
-
-    static void showError(String title, String message){
-        Locale.setDefault(Locale.ENGLISH);
-        Alert error = new Alert(Alert.AlertType.ERROR);
-        error.setTitle(title);
-        error.setHeaderText(message);
-        error.show();
     }
 
     @Override
