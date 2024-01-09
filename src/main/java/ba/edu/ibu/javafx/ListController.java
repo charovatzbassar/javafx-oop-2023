@@ -1,5 +1,6 @@
 package ba.edu.ibu.javafx;
 
+import ba.edu.ibu.javafx.models.Student;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;

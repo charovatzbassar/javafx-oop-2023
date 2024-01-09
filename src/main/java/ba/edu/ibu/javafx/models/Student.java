@@ -1,4 +1,4 @@
-package ba.edu.ibu.javafx;
+package ba.edu.ibu.javafx.models;
 
 public class Student {
     private int id;
