@@ -86,6 +86,7 @@ public class ListController implements Initializable {
                     if (students.get(i).getId() == colId.getCellData(selectedIndex)) {
                         tempStudent = new Student(Integer.valueOf(txtId.getText()), txtName.getText(), txtSurname.getText(), txtYear.getText(), txtCycle.getText());
                         students.set(i, tempStudent);
+                        saveStudentToDB(tempStudent);
                     }
                 }
                 tblStudents.refresh();
@@ -95,6 +96,7 @@ public class ListController implements Initializable {
                         ErrorModal.showError("Invalid attribute", "You have to populate all fields");
                     } else {
                         students.add(new Student(Integer.valueOf(txtId.getText()), txtName.getText(), txtSurname.getText(), txtYear.getText(), txtCycle.getText()));
+                        saveStudentToDB(tempStudent);
                     }
                 } catch (NumberFormatException e) {
                     ErrorModal.showError("Invalid attribute", "You have to populate all fields");
@@ -120,6 +122,35 @@ public class ListController implements Initializable {
 
     public void reinitializeTable() {
         tblStudents.setItems(students);
+    }
+
+    public boolean saveStudentToDB(Student student) {
+        try {
+            PreparedStatement statementNewUser = dbConnection.getConnection().prepareStatement("INSERT INTO student (id, firstName, lastName, yearOfStudy, cycle) VALUES (? ,?, ?, ?, ?);");
+            statementNewUser.setInt(1, student.getId());
+            statementNewUser.setString(2, student.getName());
+            statementNewUser.setString(3, student.getSurname());
+            statementNewUser.setString(4, student.getYear());
+            statementNewUser.setString(5, student.getCycle());
+
+            int rowsAffected = statementNewUser.executeUpdate();
+
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    public boolean isValidId(String id) {
+        try {
+            PreparedStatement statement = dbConnection.getConnection().prepareStatement("select id from student where id = ?");
+            statement.setInt(1, Integer.parseInt(id));
+            ResultSet rs = statement.executeQuery();
+
+            return !rs.next();
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
 }
