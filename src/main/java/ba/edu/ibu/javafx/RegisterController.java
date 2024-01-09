@@ -23,10 +23,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
 
-public class LoginController implements Initializable {
+public class RegisterController implements Initializable {
+    private Parent root;
+    private Stage stage;
+    private Scene scene;
 
     @FXML
-    public Button btnLogin;
+    public Button btnRegister;
     @FXML
     public TextField emailField;
     @FXML
@@ -36,40 +39,19 @@ public class LoginController implements Initializable {
     @FXML
     public Label passwordFieldLabel;
     @FXML
-    public Button goToRegisterBtn;
-    private Parent root;
-    private Stage stage;
-    private Scene scene;
-
+    public Button goToLoginButton;
+    private static final DBConnection dbConnection = DBConnection.getInstance();
     private static final String EMAIL_REGEX =
             "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
     private static final String PASSWORD_REGEX = "^(?=.*[A-Z])(?=.*\\d).{8,}$";
 
-    private static final DBConnection dbConnection = DBConnection.getInstance();
-
     @FXML
-    void login(ActionEvent event) throws IOException {
+    void register (ActionEvent event) throws IOException {
         User user = new User(emailField.getText(), passwordField.getText());
         if (credentialsValid(user)) {
             switchToStudentsScreen(event);
         } else {
-            ErrorModal.showError("Invalid credentials", "Invalid credentials, try again.");
-        }
-    }
-
-    boolean credentialsValid(User user) {
-        if (!user.getEmail().matches(EMAIL_REGEX) || !user.getPassword().matches(PASSWORD_REGEX)) {
-            return false;
-        }
-
-        try {
-            PreparedStatement statement = dbConnection.getConnection().prepareStatement("select email, password from user where email = ? and password = ?;");
-            statement.setString(1, user.getEmail());
-            statement.setString(2, user.getPassword());
-            ResultSet rs = statement.executeQuery();
-            return rs.next();
-        } catch (SQLException e) {
-            return false;
+            ErrorModal.showError("Invalid credentials", "Invalid credentials, or user already exists.");
         }
     }
 
@@ -81,15 +63,44 @@ public class LoginController implements Initializable {
         stage.show();
     }
 
+    boolean credentialsValid(User user) {
+        if (!user.getEmail().matches(EMAIL_REGEX) || !user.getPassword().matches(PASSWORD_REGEX)) {
+            return false;
+        }
+
+        try {
+            PreparedStatement statementUser = dbConnection.getConnection().prepareStatement("select email, password from user where email = ? and password = ?;");
+            statementUser.setString(1, user.getEmail());
+            statementUser.setString(2, user.getPassword());
+
+            ResultSet rs = statementUser.executeQuery();
+
+            if (rs.next()) {
+                return false;
+            }
+
+            PreparedStatement statementNewUser = dbConnection.getConnection().prepareStatement("INSERT INTO user (email, password) VALUES (? ,?);");
+            statementNewUser.setString(1, user.getEmail());
+            statementNewUser.setString(2, user.getPassword());
+
+            int rowsAffected = statementNewUser.executeUpdate();
+
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+
     @FXML
-    void goToRegisterPage(ActionEvent event) throws IOException {
-        root = FXMLLoader.load(getClass().getResource("register.fxml"));
+    void goToLoginPage(ActionEvent event) throws IOException {
+        root = FXMLLoader.load(getClass().getResource("login.fxml"));
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
-
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

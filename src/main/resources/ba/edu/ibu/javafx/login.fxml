@@ -12,6 +12,7 @@
                 <PasswordField fx:id="passwordField" layoutX="230.0" layoutY="208.0" />
             <Label fx:id="emailFieldLabel" layoutX="230.0" layoutY="113.0" prefHeight="17.0" prefWidth="52.0" text="Email" />
             <Label fx:id="passwordFieldLabel" layoutX="230.0" layoutY="191.0" prefHeight="17.0" prefWidth="52.0" text="Password" />
+            <Button fx:id="goToRegisterBtn" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" text="Go To Registration" onAction="#goToRegisterPage" />
             </children>
         </AnchorPane>
     </children>

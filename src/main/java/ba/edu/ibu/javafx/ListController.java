@@ -1,6 +1,8 @@
 package ba.edu.ibu.javafx;
 
+import ba.edu.ibu.javafx.components.ErrorModal;
 import ba.edu.ibu.javafx.models.Student;
+import ba.edu.ibu.javafx.util.DBConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,9 +12,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 
 public class ListController implements Initializable {
     @FXML
@@ -39,21 +42,27 @@ public class ListController implements Initializable {
     public TableColumn<Student, String> colYear;
     @FXML
     public Button btnSave;
-    ObservableList<Student> students = FXCollections.observableArrayList(
-            Arrays.asList(
-                    new Student(1, "Becir", "Isakovic", "1", "1"),
-                    new Student(2, "Bekir", "Ishakovic", "2", "2")
-            )
-    );
-    int selectedIndex;
 
-    static void showError(String title, String message) {
-        Locale.setDefault(Locale.ENGLISH);
-        Alert error = new Alert(Alert.AlertType.ERROR);
-        error.setTitle(title);
-        error.setHeaderText(message);
-        error.show();
+    private static final DBConnection dbConnection = new DBConnection();
+    ObservableList<Student> students = FXCollections.observableArrayList(Arrays.asList());
+
+    void fetchStudents() {
+        try {
+            PreparedStatement statement = dbConnection.getConnection().prepareStatement("select * from student;");
+            ResultSet rs = statement.executeQuery();
+
+            while(rs.next()) {
+                Student student = new Student(rs.getInt("id"), rs.getString("firstName"), rs.getString("lastName"), rs.getString("yearOfStudy"), rs.getString("cycle"));
+                students.add(student);
+            }
+
+
+        } catch (SQLException e) {
+
+        }
     }
+
+    int selectedIndex;
 
     @FXML
     void getStudent(MouseEvent event) {
@@ -83,12 +92,12 @@ public class ListController implements Initializable {
             } else {
                 try {
                     if (txtId.getText().equals("") || txtName.getText().equals("") || txtSurname.getText().equals("") || txtYear.getText().equals("") || txtCycle.getText().equals("")) {
-                        showError("Invalid attribute", "You have to populate all fields");
+                        ErrorModal.showError("Invalid attribute", "You have to populate all fields");
                     } else {
                         students.add(new Student(Integer.valueOf(txtId.getText()), txtName.getText(), txtSurname.getText(), txtYear.getText(), txtCycle.getText()));
                     }
                 } catch (NumberFormatException e) {
-                    showError("Invalid attribute", "You have to populate all fields");
+                    ErrorModal.showError("Invalid attribute", "You have to populate all fields");
                 }
             }
         }
@@ -96,6 +105,7 @@ public class ListController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        fetchStudents();
         initializeTable();
     }
 

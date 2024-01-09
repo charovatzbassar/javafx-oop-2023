@@ -54,4 +54,5 @@ public class Student {
     public void setCycle(String cycle) {
         this.cycle = cycle;
     }
+
 }
