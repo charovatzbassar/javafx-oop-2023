@@ -43,6 +43,12 @@ public class ListController implements Initializable {
     @FXML
     public Button btnSave;
 
+    @FXML
+    public TextField searchTerm;
+
+    @FXML
+    public Button searchButton;
+
     private static final DBConnection dbConnection = new DBConnection();
     ObservableList<Student> students = FXCollections.observableArrayList(Arrays.asList());
 
@@ -78,15 +84,14 @@ public class ListController implements Initializable {
 
     @FXML
     void saveStudent() {
-        Student tempStudent = null;
         if (tblStudents.getSelectionModel() != null) {
             selectedIndex = tblStudents.getSelectionModel().getSelectedIndex();
             if (colId.getCellData(selectedIndex) != null) {
                 for (int i = 0; i < students.size(); i++) {
                     if (students.get(i).getId() == colId.getCellData(selectedIndex)) {
-                        tempStudent = new Student(Integer.valueOf(txtId.getText()), txtName.getText(), txtSurname.getText(), txtYear.getText(), txtCycle.getText());
+                        Student tempStudent = new Student(Integer.valueOf(txtId.getText()), txtName.getText(), txtSurname.getText(), txtYear.getText(), txtCycle.getText());
                         students.set(i, tempStudent);
-                        saveStudentToDB(tempStudent);
+                        modifyStudent(tempStudent);
                     }
                 }
                 tblStudents.refresh();
@@ -94,9 +99,14 @@ public class ListController implements Initializable {
                 try {
                     if (txtId.getText().equals("") || txtName.getText().equals("") || txtSurname.getText().equals("") || txtYear.getText().equals("") || txtCycle.getText().equals("")) {
                         ErrorModal.showError("Invalid attribute", "You have to populate all fields");
-                    } else {
-                        students.add(new Student(Integer.valueOf(txtId.getText()), txtName.getText(), txtSurname.getText(), txtYear.getText(), txtCycle.getText()));
-                        saveStudentToDB(tempStudent);
+                    }
+                    else if (!isValidId(txtId.getText())) {
+                        ErrorModal.showError("Invalid ID", "Student ID is invalid");
+                    }
+                    else {
+                        Student newStudent = new Student(Integer.valueOf(txtId.getText()), txtName.getText(), txtSurname.getText(), txtYear.getText(), txtCycle.getText());
+                        students.add(newStudent);
+                        saveStudentToDB(newStudent);
                     }
                 } catch (NumberFormatException e) {
                     ErrorModal.showError("Invalid attribute", "You have to populate all fields");
@@ -138,6 +148,43 @@ public class ListController implements Initializable {
             return rowsAffected > 0;
         } catch (SQLException e) {
             return false;
+        }
+    }
+
+    public boolean modifyStudent(Student student) {
+        try {
+            PreparedStatement statementNewUser = dbConnection.getConnection().prepareStatement("UPDATE student SET id = ?, firstName = ?, lastName = ?, yearOfStudy = ?, cycle = ? WHERE id = ? ;");
+            statementNewUser.setInt(1, student.getId());
+            statementNewUser.setString(2, student.getName());
+            statementNewUser.setString(3, student.getSurname());
+            statementNewUser.setString(4, student.getYear());
+            statementNewUser.setString(5, student.getCycle());
+            statementNewUser.setInt(6, student.getId());
+
+            int rowsAffected = statementNewUser.executeUpdate();
+
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    @FXML
+    public void searchStudents() {
+        try {
+            PreparedStatement statement = dbConnection.getConnection().prepareStatement("select * from student where concat(firstName, ' ', lastName) like ?;");
+            statement.setString(1, "%" + searchTerm.getText() + "%");
+            ResultSet rs = statement.executeQuery();
+
+            ObservableList<Student> foundStudents = FXCollections.observableArrayList(Arrays.asList());
+
+            while (rs.next()) {
+                foundStudents.add(new Student(rs.getInt("id"), rs.getString("firstName"), rs.getString("lastName"), rs.getString("yearOfStudy"), rs.getString("cycle")));
+            }
+
+            tblStudents.setItems(foundStudents);
+
+        } catch (SQLException e) {
         }
     }
 
